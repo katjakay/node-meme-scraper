@@ -1,21 +1,14 @@
-// htmlContent = HTML information request from URL
-
-// const url = 'https://memegen-link-examples-upleveled.netlify.app/';
-
-// Request HTML information from the URL with axios npm
-
 import axios from 'axios';
-import cheerio from 'cheerio';
-
-const url = `https://memegen-link-examples-upleveled.netlify.app/`;
+import * as cheerio from 'cheerio';
 
 axios
-  .get(url)
-  .then((response) => {
-    htmlContent(response.data);
-  })
-  .catch((error) => {
-    console.log('Warning Error!');
-  });
+  .get('https://memegen-link-examples-upleveled.netlify.app/')
+  .then((urlResponse) => {
+    const $ = cheerio.load(urlResponse.data);
 
-// save HTML to new variable htmlContent using cheerio (parses markup)
+    $('div').each((index, element) => {
+      const imageUrls = $(element).find('a').attr('href');
+
+      console.log(imageUrls);
+    });
+  });
