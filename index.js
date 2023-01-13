@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 
-import axios from 'axios';
+import axios, { HttpStatusCode } from 'axios';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
+import https from 'https';
 
-// Loading HTML using cheerio -> DONE
-// Scrape img links only -> DONE
-// Filter to 10 links -> download -> request data with fetch()
-// Push download to folder -> re-naming file name -> writing data to file
+const url = 'https://memegen-link-examples-upleveled.netlify.app/';
+const imagesArray = [];
 
 try {
   if (!fs.existsSync('./memes')) {
@@ -17,22 +16,33 @@ try {
   console.error(err);
 }
 
-axios
-  .get('https://memegen-link-examples-upleveled.netlify.app/')
-  .then((urlResponse) => {
-    const $ = cheerio.load(urlResponse.data);
+// 1 -- Requesting HTML data using axios
 
-    // for (let i = 0; i < 10; i++) {
-    $('div').each((index, element) => {
-      const imageUrls = $(element).find('img').attr('src');
+axios.get(url).then((response) => {
+  const $ = cheerio.load(response.data);
+  const html = response.data;
 
-      fetch(imageUrls).then((response) => {
-        const path = './memes/';
+  // 2 -- Filter <img> data using cheerio
 
-        const dest = fs.createWriteStream(path);
-        response.body.pipe(dest);
-      });
-    });
-
-    console.log('Images downloaded successfully!');
+  $('div', 'section', html).each(function () {
+    const imageUrls = $(this).find('img').attr('src');
+    imagesArray.push(imageUrls);
   });
+
+  // 3 -- Filtering 10 images links using slice() method
+
+  const tenMemes = imagesArray.slice(0, 10);
+
+  // 4 -- Downloading the images (by http.request) and putting into new folder
+  // 5 -- renaming file name starting with 01.jpg
+
+  for (let i = 0; i < 10; i++) {
+    const img = tenMemes[i];
+
+    https.get(img, (res) => {
+      const path = `memes/0${i + 1}.jpg`;
+      res.pipe(fs.createWriteStream(path));
+    });
+  }
+  console.log('Downloading is finished');
+});
