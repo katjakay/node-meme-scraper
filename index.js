@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-
-import axios, { HttpStatusCode } from 'axios';
+import * as fs from 'node:fs';
+import https from 'node:https';
+import axios from 'axios';
 import * as cheerio from 'cheerio';
-import * as fs from 'fs';
-import https from 'https';
 
 const url = 'https://memegen-link-examples-upleveled.netlify.app/';
 const imagesArray = [];
 
+// 0 -- Checks if folder already exists, handles error
 try {
   if (!fs.existsSync('./memes')) {
     fs.mkdirSync('./memes');
@@ -18,7 +17,7 @@ try {
 
 // 1 -- Requesting HTML data using axios
 
-axios.get(url).then((response) => {
+await axios.get(url).then((response) => {
   const $ = cheerio.load(response.data);
   const html = response.data;
 
@@ -33,8 +32,8 @@ axios.get(url).then((response) => {
 
   const tenMemes = imagesArray.slice(0, 10);
 
-  // 4 -- Downloading the images (by http.request) and putting into new folder
-  // 5 -- renaming file name starting with 01.jpg
+  // 4 -- Downloading the images (by http.request) and putting into a new folder
+  // 5 -- Renaming file name starting with 01.jpg
 
   for (let i = 0; i < 10; i++) {
     const img = tenMemes[i];
@@ -44,5 +43,5 @@ axios.get(url).then((response) => {
       res.pipe(fs.createWriteStream(path));
     });
   }
-  console.log('Downloading is finished');
+  console.log('Download is completed');
 });
